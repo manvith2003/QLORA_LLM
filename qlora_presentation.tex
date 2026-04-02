@@ -246,14 +246,56 @@
     \end{itemize}
 \end{frame}
 
-% Slide 12
+% Slide 12 — Architecture Flow Diagram (TikZ)
 \begin{frame}{Architecture Flow}
-    \begin{enumerate}
-        \item \textbf{Load Data:} FP32 Pretrained LLM Weights are loaded into CPU.
-        \item \textbf{C++ Quantization:} Weights are block-sized and compressed into 4-bit indices.
-        \item \textbf{Memory Packing:} Two 4-bit indices are bitwise combined into a single 8-bit byte. Memory footprint is slashed.
-        \item \textbf{PyTorch Forward Pass:} On the fly, C++ un-packs the 8-bit bytes, maps them to scales, and adds the FP32 LoRA adapters calculation.
-    \end{enumerate}
+    \begin{center}
+    \begin{tikzpicture}[
+        node distance=1.4cm and 1.6cm,
+        box/.style={rectangle, draw=black!80, fill=blue!8, thick, rounded corners=3pt,
+                     minimum width=2.4cm, minimum height=1.1cm, align=center,
+                     font=\small},
+        frozen/.style={rectangle, draw=red!70!black, fill=red!8, thick, rounded corners=3pt,
+                       minimum width=2.6cm, minimum height=1.1cm, align=center,
+                       font=\small},
+        lora/.style={rectangle, draw=green!60!black, fill=green!8, thick, rounded corners=3pt,
+                     minimum width=2.4cm, minimum height=1.1cm, align=center,
+                     font=\small},
+        output/.style={rectangle, draw=orange!80!black, fill=orange!8, thick, rounded corners=3pt,
+                       minimum width=3.0cm, minimum height=0.9cm, align=center,
+                       font=\small\bfseries},
+        arr/.style={-{Stealth[length=6pt]}, thick, black!70},
+        label/.style={font=\scriptsize\color{gray!70!black}, midway},
+    ]
+        % Nodes — top row
+        \node[box] (fp32) {FP32 Model\\{\scriptsize (53.4 MB)}};
+        \node[box, right=of fp32] (quant) {C++ Quantize\\{\scriptsize (blockwise)}};
+        \node[frozen, right=of quant] (pack) {4-bit Pack\\{\scriptsize (6.7 MB)}};
+
+        % Nodes — bottom row
+        \node[frozen, below=1.6cm of pack] (fwd) {Frozen Base\\+ LoRA Layer\\{\scriptsize (forward pass)}};
+        \node[lora, left=of fwd] (lora) {LoRA A \& B\\{\scriptsize (trainable)}};
+
+        % Output
+        \node[output, below=1.2cm of fwd] (out) {$Y = \text{Base}(x) + B \cdot A(x) \times \alpha$};
+
+        % Arrows
+        \draw[arr] (fp32) -- (quant) node[label, above] {compress};
+        \draw[arr] (quant) -- (pack) node[label, above] {bit-pack};
+        \draw[arr] (pack) -- (fwd) node[label, right] {frozen};
+        \draw[arr] (lora) -- (fwd) node[label, above] {\textit{only these train}};
+        \draw[arr] (fwd) -- (out);
+
+        % Dashed feedback
+        \draw[-{Stealth[length=5pt]}, dashed, green!60!black, thick]
+            (out.west) -| ([xshift=-0.6cm]lora.south) -- (lora.south)
+            node[label, left, pos=0.3] {gradients};
+
+        % Memory annotation
+        \draw[decorate, decoration={brace, amplitude=5pt, mirror}, thick, red!60!black]
+            ([yshift=-0.15cm]fp32.south west) -- ([yshift=-0.15cm]fp32.south east)
+            node[midway, below=5pt, font=\scriptsize, text=red!60!black] {87.5\% smaller $\rightarrow$};
+    \end{tikzpicture}
+    \end{center}
 \end{frame}
 
 % Slide 13
