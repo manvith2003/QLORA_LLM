@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# PyTorch
+*.pt
+*.pth
+
+# TeX/LaTeX
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.gz
+*.fdb_latexmk
+*.fls
+
+# OS
+.DS_Store
+
+# Performance images (optional to keep, but often excluded if re-generated)
+# Uncomment if you want to exclude benchmark images
+# *.png
