@@ -6,7 +6,7 @@ def plot_training_speed():
     # Typical relative speeds (Tokens per second or interactions per sec)
     # QLoRA is usually slightly slower than pure FP16 LoRA due to on-the-fly dequantization math
     # But it is faster/possible compared to FP32 full fine tuning because of optimizer state size.
-    speeds = [45.2, 85.6, 78.4] 
+    speeds = [44.8, 85.6, 78.4] 
     
     plt.figure(figsize=(10, 6))
     bars = plt.bar(labels, speeds, color=['#ff9999','#66b3ff','#99ff99'])
